@@ -97,8 +97,20 @@ export const createStyleFunction = async (esriLayerInfoJson, mapProjection) => {
         });
 
         if (labelStyle && labelStyle.style) {
-            const text = getFormattedLabel(feature, labelStyle.label);
-            labelStyle.style.getText().setText(text);
+            const labelText = getFormattedLabel(feature, labelStyle.label);
+            const doesLabelRequireDataValue =
+                !Array.isArray(labelText) && labelText?.startsWith('{') && labelText?.endsWith('}')
+            
+            if (doesLabelRequireDataValue) {
+                const searchText = labelText.slice(1, -1)
+                const dataValue = feature.get(searchText) ?? feature.get(searchText.toLowerCase())
+          
+                labelStyle.style.getText().setText(dataValue)
+            } 
+            if (!doesLabelRequireDataValue) {
+                labelStyle.style.getText().setText(labelText);
+            }
+
             styles.push(labelStyle.style);
         }
 
